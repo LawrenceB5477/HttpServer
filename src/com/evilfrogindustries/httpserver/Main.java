@@ -2,8 +2,12 @@ package com.evilfrogindustries.httpserver;
 
 import com.evilfrogindustries.httpserver.context.IndexContext;
 import com.sun.net.httpserver.HttpServer;
+import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class Main {
     private HttpServer server;
@@ -14,6 +18,18 @@ public class Main {
     }
 
     public void startServer() {
+        //If the resources directory does not exist, create it.
+        Path contentDirectory = Paths.get("./src/Resources");
+        if (!Files.exists(contentDirectory)) {
+            System.out.println("Content path does not exist. Creating.");
+            try {
+                File contentDirectoryFile = new File(contentDirectory.toString());
+                contentDirectoryFile.mkdirs();
+            } catch (SecurityException e) {
+                System.out.println("Could not make the content path.");
+            }
+        }
+
         try {
             server = HttpServer.create(new InetSocketAddress(80), 0);
         } catch (IOException e) {
