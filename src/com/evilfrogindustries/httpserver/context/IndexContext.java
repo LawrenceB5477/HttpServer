@@ -1,5 +1,6 @@
 package com.evilfrogindustries.httpserver.context;
 
+import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
@@ -12,28 +13,52 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class IndexContext implements HttpHandler {
+
     @Override
     public void handle(HttpExchange httpExchange) throws IOException {
-        //Get the url request, for debugging
+
+        //Test to see if the index should be sent.
         URI uriObject = httpExchange.getRequestURI();
-        System.out.println("The requested uri: "+ uriObject);
+        System.out.println("The requested uri: " + uriObject);
 
-        //Get the paths to the files I need.
-        File test = new File("./src/Resources" + httpExchange.getRequestURI().getPath());
-        Path indexPath = Paths.get(test.getCanonicalPath());
-        byte[] b = Files.readAllBytes(indexPath);
+        if (uriObject.toString().equals("/") || uriObject.toString().equals("\\")) {
+            uriObject = URI.create(httpExchange.getRequestURI().toString() + "index.html");
 
-        System.out.println("This is where we are.: " + test.getCanonicalPath());
+            //Get the data for the file requested by the path.
+            File test = new File("./src/Resources" + uriObject.getPath());
+            Path indexPath = Paths.get(test.getCanonicalPath());
+            byte[] b = Files.readAllBytes(indexPath);
 
-        //Outputs standard header information.
-        //Headers header = httpExchange.getResponseHeaders();
-        //header.add("Content-Type", "text/html");
-        httpExchange.sendResponseHeaders(200, b.length);
+            //Outputs standard header information.
+            Headers header = httpExchange.getResponseHeaders();
+            header.add("Content-Type", "text/html");
+            httpExchange.sendResponseHeaders(200, b.length);
 
-        //Writes to the http body
-        OutputStream responseStream = httpExchange.getResponseBody();
-        responseStream.write(b);
-        responseStream.close();
+            //Writes to the http body
+            OutputStream responseStream = httpExchange.getResponseBody();
+            responseStream.write(b);
+            responseStream.close();
+        }
+        try {
+            //Read all files index.html needs.
+            File test = new File("./src/Resources" + httpExchange.getRequestURI().getPath());
+            Path indexPath = Paths.get(test.getCanonicalPath());
+            byte[] b = Files.readAllBytes(indexPath);
+
+            httpExchange.sendResponseHeaders(200, b.length);
+
+            //Writes to the http body
+            OutputStream responseStream = httpExchange.getResponseBody();
+            responseStream.write(b);
+        } catch (Exception e) {
+            httpExchange.sendResponseHeaders(404, 0);
+            String error = "<h1>404 not found.</h1>";
+            byte[] b = error.getBytes();
+            httpExchange.getResponseBody().write(b);
+            System.out.println("Took second route.");
+        } finally {
+            httpExchange.getResponseBody().close();
+        }
 
     }
 
