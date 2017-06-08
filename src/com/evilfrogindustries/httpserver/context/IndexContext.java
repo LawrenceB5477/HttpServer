@@ -7,56 +7,51 @@ import com.sun.net.httpserver.HttpHandler;
 import java.io.*;
 import java.net.URI;
 
-//TODO see why an exception is thrown, send proper file-type
+//TODO send proper file-type, get rid of .. input
 public class IndexContext implements HttpHandler {
 
     @Override
-    public void handle(HttpExchange httpExchange) throws IOException {
-
+    public void handle(HttpExchange httpExchange) {
         URI uriObject = httpExchange.getRequestURI();
         System.out.println("The requested uri: " + uriObject);
 
-        //Test to see if the index should be sent.
-        if (uriObject.toString().equals("/") || uriObject.toString().equals("\\")) {
-            uriObject = URI.create(httpExchange.getRequestURI().toString() + "index.html");
-            try {
-                //Get the data for the file requested by the path.
-                File resource = new File("./Resources" + uriObject.getPath());
-                byte[] b = createByteArray(resource);
-
-                //Outputs standard header information and index body.
-                writeHttpHeader(httpExchange, b, "text/html");
-                writeHttpBody(httpExchange.getResponseBody(), b);
-
-            } catch (Exception e) {
-                e.printStackTrace();
-                sendResponse404(httpExchange, "<h1>Put the index file in /Resources/.</h1>");
-            } finally {
-                httpExchange.getResponseBody().close();
-            }
-        }
-
-        //Handles sending all files besides the index.
+        //Sends the requested file.
         try {
-            //Read all files index.html needs.
-            File test = new File("./Resources" + httpExchange.getRequestURI().getPath());
-            byte[] b = createByteArray(test);
+            File test = null;
 
-            //Send the response header and body.
+            if (uriObject.toString().equals("/") || uriObject.toString().equals("\\")) {
+                uriObject = URI.create(httpExchange.getRequestURI().toString() + "index.html");
+                test = new File("./Resources" + uriObject.getPath());
+
+            } else {
+                test = new File("./Resources" + httpExchange.getRequestURI().getPath());
+            }
+
+            //Send the response.
+            byte[] b = createByteArray(test);
             httpExchange.sendResponseHeaders(200, b.length);
             writeHttpBody(httpExchange.getResponseBody(), b);
 
-        } catch (Exception e) {
+        } catch (IOException e) {
             e.printStackTrace();
             sendResponse404(httpExchange, "<h1>404 Not Found.</h1>");
 
         } finally {
-            httpExchange.getResponseBody().close();
+            try {
+                httpExchange.getResponseBody().close();
+            } catch(IOException e) {
+                e.printStackTrace();
+            }
         }
-
     }
 
+
+
     //Methods that drive the main context.
+    //Will be used to set the file type
+    public void setHttpHeaderFile(String canonPath) {
+
+    }
 
     public void writeHttpHeader(HttpExchange httpExchange, byte[] b, String text) throws IOException {
         Headers header = httpExchange.getResponseHeaders();
