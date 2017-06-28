@@ -1,7 +1,7 @@
 # HTTPServer
 A very simple http server. 
 
-It creates a folder named /Resources/ and looks for an 
+It creates a folder with path /Resources/ and looks for an 
 index.html file. It is currently vulnerable to a user traversing 
 the folder structure using the browser, I have to figure out how to 
 sanatize input. 
